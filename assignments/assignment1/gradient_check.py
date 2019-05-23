@@ -32,7 +32,12 @@ def check_gradient(f, x, delta=1e-5, tol = 1e-4):
     while not it.finished:
         ix = it.multi_index
         analytic_grad_at_ix = analytic_grad[ix]
-        numeric_grad_at_ix = 0
+        x1 = x.copy()
+        x2 = x.copy()
+        x1[ix] = x1[ix]-delta
+        x2[ix] = x2[ix]+delta
+        numeric_grad_at_ix = (f(x2)[0] - f(x1)[0])/(2*delta)
+
 
         # TODO compute value of numeric gradient of f to idx
         if not np.isclose(numeric_grad_at_ix, analytic_grad_at_ix, tol):
