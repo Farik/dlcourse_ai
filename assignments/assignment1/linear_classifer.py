@@ -48,6 +48,7 @@ def cross_entropy_loss(probs, target_index):
     # loss = np.sum(log_likelihood) / m
     # return loss
 
+
 def softmax_with_cross_entropy(predictions, target_index):
     '''
     Computes softmax and cross-entropy loss for model predictions,
@@ -75,7 +76,6 @@ def softmax_with_cross_entropy(predictions, target_index):
     grad = grad/batches_num
 
     return cross_entropy_loss(probs, target_index), grad.reshape(predictions.shape)
-    #return cross_entropy_loss(probs, target_index), np.sum(grad, axis=0)
 
 
 
@@ -92,11 +92,7 @@ def l2_regularization(W, reg_strength):
       gradient, np.array same shape as W - gradient of weight by l2 loss
     '''
 
-    # TODO: implement l2 regularization and gradient
-    # Your final implementation shouldn't have any loops
-    raise Exception("Not implemented!")
-
-    return loss, grad
+    return reg_strength*np.sum(W**2)/2, reg_strength*W
     
 
 def linear_softmax(X, W, target_index):
@@ -121,16 +117,11 @@ def linear_softmax(X, W, target_index):
     if not isinstance(target_index, np.ndarray):
         target_index = np.atleast_2d(target_index)
 
-    batches_num = target_index.shape[0]
-
     probs = softmax(predictions.copy())
     grad = np.zeros(W.shape)
-    # grad[range(batches_num), target_index.squeeze()] -= 1
-    # grad = np.dot(grad, X)/batches_num
     y = np.zeros(predictions.shape)
     y[range(target_index.shape[0]), target_index] = 1
-    #grad = (-1 / N)*np.dot((y - probs), X)
-    grad = (-1 / N) * np.dot(np.transpose(X),(y - probs))
+    grad = (-1 / N) * np.dot(np.transpose(X), (y - probs))
 
     return cross_entropy_loss(probs, target_index), grad
 
