@@ -113,13 +113,26 @@ def linear_softmax(X, W, target_index):
       gradient, np.array same shape as W - gradient of weight by loss
 
     '''
+
+    N, D = X.shape
+
     predictions = np.dot(X, W)
 
-    # TODO implement prediction and gradient over W
-    # Your final implementation shouldn't have any loops
-    raise Exception("Not implemented!")
-    
-    return loss, dW
+    if not isinstance(target_index, np.ndarray):
+        target_index = np.atleast_2d(target_index)
+
+    batches_num = target_index.shape[0]
+
+    probs = softmax(predictions.copy())
+    grad = np.zeros(W.shape)
+    # grad[range(batches_num), target_index.squeeze()] -= 1
+    # grad = np.dot(grad, X)/batches_num
+    y = np.zeros(predictions.shape)
+    y[range(target_index.shape[0]), target_index] = 1
+    #grad = (-1 / N)*np.dot((y - probs), X)
+    grad = (-1 / N) * np.dot(np.transpose(X),(y - probs))
+
+    return cross_entropy_loss(probs, target_index), grad
 
 
 class LinearSoftmaxClassifier():
