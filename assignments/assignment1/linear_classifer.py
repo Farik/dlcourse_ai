@@ -150,6 +150,9 @@ class LinearSoftmaxClassifier():
         if self.W is None:
             self.W = 0.001 * np.random.randn(num_features, num_classes)
 
+
+
+
         loss_history = []
         for epoch in range(epochs):
             shuffled_indices = np.arange(num_train)
@@ -159,13 +162,21 @@ class LinearSoftmaxClassifier():
 
             # TODO implement generating batches from indices
             # Compute loss and gradients
+            #loss, dW = linear_softmax(X[batches_indices, ][0], self.W, y[batches_indices, ][0])
+            loss_softmax = [linear_softmax(X[batches_indices, ][batch_index], self.W, y[batches_indices, ][batch_index])
+                            for batch_index in range(int(num_train/batch_size))]
+            loss = np.average(np.asarray(loss_softmax)[:,0])
+            dW = np.average(np.asarray(loss_softmax)[:,1])
+            loss_l2, dW_l2 = l2_regularization(self.W, reg)
             # Apply gradient to weights using learning rate
             # Don't forget to add both cross-entropy loss
             # and regularization!
-            raise Exception("Not implemented!")
+            loss_history.append(loss+loss_l2)
+
+            self.W -= (dW+dW_l2)*learning_rate
 
             # end
-            print("Epoch %i, loss: %f" % (epoch, loss))
+            print("Epoch %i, loss: %f" % (epoch, loss+loss_l2))
 
         return loss_history
 
@@ -181,11 +192,7 @@ class LinearSoftmaxClassifier():
         '''
         y_pred = np.zeros(X.shape[0], dtype=np.int)
 
-        # TODO Implement class prediction
-        # Your final implementation shouldn't have any loops
-        raise Exception("Not implemented!")
-
-        return y_pred
+        return np.argmax(softmax(np.dot(X, self.W)), axis=1)
 
 
 

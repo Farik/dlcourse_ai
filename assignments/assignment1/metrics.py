@@ -1,3 +1,5 @@
+import numpy as np
+
 def binary_classification_metrics(prediction, ground_truth):
     '''
     Computes metrics for binary classification
@@ -34,4 +36,6 @@ def multiclass_accuracy(prediction, ground_truth):
     accuracy - ratio of accurate predictions to total samples
     '''
     # TODO: Implement computing accuracy
-    return 0
+    diff = prediction-ground_truth
+
+    return np.where(diff == 0)[0].shape[0]/prediction.shape[0]
