@@ -1,6 +1,6 @@
 import numpy as np
 
-from layers import FullyConnectedLayer, ReLULayer, softmax_with_cross_entropy, l2_regularization
+from layers import FullyConnectedLayer, ReLULayer, softmax_with_cross_entropy, l2_regularization, Param
 
 
 class TwoLayerNet:
@@ -17,8 +17,11 @@ class TwoLayerNet:
         reg, float - L2 regularization strength
         """
         self.reg = reg
-        # TODO Create necessary layers
-        raise Exception("Not implemented!")
+        self.W = Param(0.001 * np.random.randn(n_input, hidden_layer_size))
+        self.B = Param(0.001 * np.random.randn(1, hidden_layer_size))
+        self.Wh = Param(0.001 * np.random.randn(hidden_layer_size, n_output))
+        self.bh = Param(0.001 * np.random.randn(1, n_output))
+        self.X = None
 
     def compute_loss_and_gradients(self, X, y):
         """
@@ -33,8 +36,10 @@ class TwoLayerNet:
         # clear parameter gradients aggregated from the previous pass
         # TODO Set parameter gradient to zeros
         # Hint: using self.params() might be useful!
-        raise Exception("Not implemented!")
-        
+        params = self.params()
+        for param_key in params:
+            params[param_key] = Param(0.001 * np.random.randn(params[param_key].value.shape))
+
         # TODO Compute loss and fill param gradients
         # by running forward and backward passes through the model
         
@@ -63,10 +68,4 @@ class TwoLayerNet:
         return pred
 
     def params(self):
-        result = {}
-
-        # TODO Implement aggregating all of the params
-
-        raise Exception("Not implemented!")
-
-        return result
+        return {'W': self.W, 'B': self.B, 'Wh': self.Wh, 'bh': self.bh}
