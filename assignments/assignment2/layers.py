@@ -2,7 +2,7 @@ import numpy as np
 
 
 def l2_regularization(W, reg_strength):
-    """
+    '''
     Computes L2 regularization loss on weights and its gradient
 
     Arguments:
@@ -12,10 +12,9 @@ def l2_regularization(W, reg_strength):
     Returns:
       loss, single value - l2 regularization loss
       gradient, np.array same shape as W - gradient of weight by l2 loss
-    """
-    # TODO: Copy from the previous assignment
-    raise Exception("Not implemented!")
-    return loss, grad
+    '''
+
+    return reg_strength*np.sum(W**2)/2, reg_strength*W
 
 
 def softmax(predictions):

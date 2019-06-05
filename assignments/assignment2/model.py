@@ -50,10 +50,17 @@ class TwoLayerNet:
         for layer in reversed(self.L):
             A = layer.backward(A)
 
+            if 'W' in layer.params():
+                loss_l2, dW_l2 = l2_regularization(layer.params()['W'].value, self.reg)
+                loss += loss_l2
+                layer.params()['W'].grad += dW_l2
+
 
         # After that, implement l2 regularization on all params
         # Hint: self.params() is useful again!
         #raise Exception("Not implemented!")
+
+
 
         return loss
 
