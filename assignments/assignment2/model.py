@@ -21,6 +21,7 @@ class TwoLayerNet:
             FullyConnectedLayer(n_input, hidden_layer_size),
             ReLULayer(),
             FullyConnectedLayer(hidden_layer_size, n_output)
+#            FullyConnectedLayer(n_input, n_output),
         ]
 
     def compute_loss_and_gradients(self, X, y):
@@ -41,11 +42,11 @@ class TwoLayerNet:
 
         # TODO Compute loss and fill param gradients
         # by running forward and backward passes through the model
-
+        test = X.copy()
         for layer in self.L:
-           X = layer.forward(X)
+            test = layer.forward(test)
 
-        loss, A = softmax_with_cross_entropy(X, y)
+        loss, A = softmax_with_cross_entropy(test, y)
 
         for layer in reversed(self.L):
             A = layer.backward(A)
@@ -79,10 +80,11 @@ class TwoLayerNet:
         # can be reused
         pred = np.zeros(X.shape[0], np.int)
 
+        test = X.copy()
         for layer in self.L:
-            X = layer.forward(X)
+            test = layer.forward(test)
 
-        pred = softmax(X.copy())
+        pred = softmax(test.copy())
 
         return np.argmax(pred, axis=1)
 

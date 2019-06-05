@@ -110,8 +110,8 @@ class ReLULayer:
         pass
 
     def forward(self, X):
-        self.activation_cache = X
-        return np.maximum(0, X)
+        self.activation_cache = X.copy()
+        return np.maximum(0, self.activation_cache)
 
     def backward(self, d_out):
         """
@@ -135,14 +135,14 @@ class ReLULayer:
 
 class FullyConnectedLayer:
     def __init__(self, n_input, n_output):
-        self.W = Param(0.001 * np.random.randn(n_input, n_output))
-        self.B = Param(0.001 * np.random.randn(1, n_output))
+        self.W = Param(0.1 * np.random.randn(n_input, n_output))
+        self.B = Param(0.1 * np.random.randn(1, n_output))
         self.X = None
 
     def forward(self, X):
         # TODO: Implement forward pass
         # Your final implementation shouldn't have any loops
-        self.X = X
+        self.X = X.copy()
         return np.dot(self.X, self.W.value) + self.B.value
 
     def backward(self, d_out):
