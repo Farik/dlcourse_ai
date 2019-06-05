@@ -18,8 +18,55 @@ def l2_regularization(W, reg_strength):
     return loss, grad
 
 
-def softmax_with_cross_entropy(preds, target_index):
-    """
+def softmax(predictions):
+    '''
+    Computes probabilities from scores
+
+    Arguments:
+      predictions, np array, shape is either (N) or (batch_size, N) -
+        classifier output
+
+    Returns:
+      probs, np array of the same shape as predictions -
+        probability for every class, 0..1
+    '''
+
+    exps = np.atleast_2d(np.exp(predictions - np.max(predictions)))
+    return exps/np.sum(exps, axis=1)[:, None]
+
+
+def cross_entropy_loss(probs, target_index):
+    '''
+    Computes cross-entropy loss
+
+    Arguments:
+      probs, np array, shape is either (N) or (batch_size, N) -
+        probabilities for every class
+      target_index: np array of int, shape is (1) or (batch_size) -
+        index of the true class for given sample(s)
+
+    Returns:
+      loss: single value
+    '''
+
+    if not isinstance(target_index, np.ndarray):
+        target_index = np.atleast_1d(target_index)
+    probs = np.atleast_2d(probs.copy())
+    batches_num = target_index.shape[0]
+
+    log_likelihood = -np.log(probs[range(batches_num), target_index.squeeze()])
+    return np.sum(log_likelihood)/batches_num
+
+    #return -np.sum(target_index*np.log(probs))
+
+    # m = 1 if not isinstance(target_index, np.ndarray) else target_index.shape[0]
+    #
+    # log_likelihood = -np.log(probs[range(m), target_index])
+    # loss = np.sum(log_likelihood) / m
+    # return loss
+
+def softmax_with_cross_entropy(predictions, target_index):
+    '''
     Computes softmax and cross-entropy loss for model predictions,
     including the gradient
 
@@ -32,11 +79,19 @@ def softmax_with_cross_entropy(preds, target_index):
     Returns:
       loss, single value - cross-entropy loss
       dprediction, np array same shape as predictions - gradient of predictions by loss value
-    """
-    # TODO: Copy from the previous assignment
-    raise Exception("Not implemented!")
+    '''
 
-    return loss, d_preds
+    if not isinstance(target_index, np.ndarray):
+        target_index = np.atleast_2d(target_index)
+
+    batches_num = target_index.shape[0]
+
+    probs = softmax(predictions.copy())
+    grad = np.atleast_2d(probs.copy())
+    grad[range(batches_num), target_index.squeeze()] -= 1
+    grad = grad/batches_num
+
+    return cross_entropy_loss(probs, target_index), grad.reshape(predictions.shape)
 
 
 class Param:
