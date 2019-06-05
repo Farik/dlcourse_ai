@@ -21,7 +21,36 @@ class TwoLayerNet:
         self.B = Param(0.001 * np.random.randn(1, hidden_layer_size))
         self.Wh = Param(0.001 * np.random.randn(hidden_layer_size, n_output))
         self.bh = Param(0.001 * np.random.randn(1, n_output))
+        self.cache = {}
         self.X = None
+
+    def forward_linear(self, X, param_code):
+        self.cache['X'+param_code] = X
+        return np.dot(X, self.params()['W'+param_code].value) + self.params()['b'+param_code].value
+
+
+    def backward_linear(self, A, param_code):
+        A_prev = np.dot(A, self.params()['W'+param_code].value.T)
+        self.params()['W'+param_code].grad = np.dot(self.cache['X'+param_code].T, A)
+        self.params()['b'+param_code].grad = np.sum(A, axis=0, keepdims=True)
+
+        return A_prev
+
+    def forward_l2(self, X):
+        return self.reg*np.sum(X**2)/2
+
+    def backward_l2(self, A):
+        return self.reg*A
+
+    def forward_relu(self, X, param_code):
+        self.cache['X'+param_code+'relu'] = X
+        return np.maximum(0, X)
+
+    def backward_relu(self, A, param_code):
+        return np.multiply(A, np.int64(self.cache['X'+param_code+'relu'] > 0))
+
+    def apply_grad(self, param_code):
+        self.params()['W'+param_code].value += self.params()['W'+param_code].grad
 
     def compute_loss_and_gradients(self, X, y):
         """
@@ -38,14 +67,20 @@ class TwoLayerNet:
         # Hint: using self.params() might be useful!
         params = self.params()
         for param_key in params:
-            params[param_key] = Param(0.001 * np.random.randn(params[param_key].value.shape))
+            params[param_key].grad = np.zeros_like(params[param_key].value)
 
         # TODO Compute loss and fill param gradients
         # by running forward and backward passes through the model
-        
         # After that, implement l2 regularization on all params
         # Hint: self.params() is useful again!
-        raise Exception("Not implemented!")
+        X = self.X
+        for layer in ['', 'h']:
+            X = self.forward_linear(X, layer)
+            X = self.forward_l2(X)
+            X = self.forward_relu(X, layer)
+
+        for layer in ['', 'h']:
+            self.apply_grad(param_code=layer)
 
         return loss
 
