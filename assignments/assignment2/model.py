@@ -33,35 +33,24 @@ class TwoLayerNet:
         X, np array (batch_size, input_features) - input data
         y, np array of int (batch_size) - classes
         """
-        # Before running forward and backward pass through the model,
-        # clear parameter gradients aggregated from the previous pass
 
-        # Hint: using self.params() might be useful!
         for index, param in self.params().items():
             param.grad = np.zeros_like(param.value)
 
-        # TODO Compute loss and fill param gradients
-        # by running forward and backward passes through the model
-        test = X.copy()
+        forward_input = X.copy()
         for layer in self.L:
-            test = layer.forward(test)
+            forward_input = layer.forward(forward_input)
 
-        loss, A = softmax_with_cross_entropy(test, y)
+        loss, backward_propagation = softmax_with_cross_entropy(forward_input, y)
 
         for layer in reversed(self.L):
-            A = layer.backward(A)
+            backward_propagation = layer.backward(backward_propagation)
 
-            if 'W' in layer.params():
-                loss_l2, dW_l2 = l2_regularization(layer.params()['W'].value, self.reg)
-                loss += loss_l2
-                layer.params()['W'].grad += dW_l2
-
-
-        # After that, implement l2 regularization on all params
-        # Hint: self.params() is useful again!
-        #raise Exception("Not implemented!")
-
-
+            for reg_param in ['W', 'B']:
+                if reg_param in layer.params():
+                    loss_l2, dp_l2 = l2_regularization(layer.params()[reg_param].value, self.reg)
+                    loss += loss_l2
+                    layer.params()[reg_param].grad += dp_l2
 
         return loss
 
@@ -80,11 +69,11 @@ class TwoLayerNet:
         # can be reused
         pred = np.zeros(X.shape[0], np.int)
 
-        test = X.copy()
+        forward_input = X.copy()
         for layer in self.L:
-            test = layer.forward(test)
+            forward_input = layer.forward(forward_input)
 
-        pred = softmax(test.copy())
+        pred = softmax(forward_input.copy())
 
         return np.argmax(pred, axis=1)
 

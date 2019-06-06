@@ -86,6 +86,13 @@ def softmax_with_cross_entropy(predictions, target_index):
     batches_num = target_index.shape[0]
 
     probs = softmax(predictions.copy())
+
+    #Find indicies that you need to replace
+    #inds = np.where(np.isnan(probs))
+
+    #Place column means in the indices. Align the arrays using take
+    #probs[inds] = 1/probs.shape[0]
+
     grad = np.atleast_2d(probs.copy())
     grad[range(batches_num), target_index.squeeze()] -= 1
     grad = grad/batches_num
@@ -135,8 +142,8 @@ class ReLULayer:
 
 class FullyConnectedLayer:
     def __init__(self, n_input, n_output):
-        self.W = Param(0.1 * np.random.randn(n_input, n_output))
-        self.B = Param(0.1 * np.random.randn(1, n_output))
+        self.W = Param(0.01 * np.random.randn(n_input, n_output))
+        self.B = Param(0.01 * np.random.randn(1, n_output))
         self.X = None
 
     def forward(self, X):
