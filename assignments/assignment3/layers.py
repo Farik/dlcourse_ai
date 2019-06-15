@@ -113,10 +113,18 @@ class ConvolutionalLayer:
 
 
     def forward(self, X):
+        # batch_size, height, width, channels = X.shape
         batch_size, height, width, channels = X.shape
+        self.X = np.pad(X, (
+                (0, 0),
+                (self.padding, self.padding),
+                (self.padding, self.padding),
+                (0, 0)
+        ), 'constant')
 
-        out_height = 0
-        out_width = 0
+        out_height = self.X.shape[1] - self.filter_size + 1
+        out_width = self.X.shape[2] - self.filter_size + 1
+
         
         # TODO: Implement forward pass
         # Hint: setup variables that hold the result
@@ -124,11 +132,19 @@ class ConvolutionalLayer:
         
         # It's ok to use loops for going over width and height
         # but try to avoid having any other loops
-        for y in range(out_height):
-            for x in range(out_width):
-                # TODO: Implement forward pass for specific location
-                pass
-        raise Exception("Not implemented!")
+        # i = np.zeros((batch_size, out_height, out_width, channels))
+        # for y in range(out_height):
+        #     for x in range(out_width):
+        #         # TODO: Implement forward pass for specific location
+        #         i[:, y, x] = np.sum(X[:, slice(y, y+self.filter_size), slice(x, x+self.filter_size), :]
+        #                                             * self.W.value, axis=(1, 2)) + self.B.value
+        #
+        # return i
+
+        x_i = np.reshape(self.X, (batch_size, self.filter_size*self.filter_size*self.in_channels)) #out_height*out_width*self.in_channels
+        w_i = np.reshape(self.W.value, (self.filter_size*self.filter_size*self.in_channels, self.out_channels))
+
+        return (np.dot(x_i, w_i) + self.B.value).reshape((batch_size, out_height, out_width, self.out_channels))
 
 
     def backward(self, d_out):
@@ -137,7 +153,7 @@ class ConvolutionalLayer:
         # when you implemented FullyConnectedLayer
         # Just do it the same number of times and accumulate gradients
 
-        batch_size, height, width, channels = X.shape
+        batch_size, height, width, channels = self.X.shape
         _, out_height, out_width, out_channels = d_out.shape
 
         # TODO: Implement backward pass
@@ -146,14 +162,26 @@ class ConvolutionalLayer:
         # of the output
 
         # Try to avoid having any other loops here too
-        for y in range(out_height):
-            for x in range(out_width):
-                # TODO: Implement backward pass for specific location
-                # Aggregate gradients for both the input and
-                # the parameters (W and B)
-                pass
+        # for y in range(out_height):
+        #     for x in range(out_width):
+        #         # TODO: Implement backward pass for specific location
+        #         # Aggregate gradients for both the input and
+        #         # the parameters (W and B)
+        #         pass
+        #
+        # raise Exception("Not implemented!")
 
-        raise Exception("Not implemented!")
+        x_i = np.reshape(self.X, (batch_size, self.filter_size*self.filter_size*self.in_channels))
+        w_i = np.reshape(self.W.value, (self.filter_size*self.filter_size*self.in_channels, self.out_channels))
+        d_out_i = np.reshape(d_out, (batch_size*out_height*out_width, self.out_channels))
+
+        d_input = np.dot(d_out_i, w_i.T)
+        w_i_grad = np.dot(x_i.T, d_out_i)
+
+        self.W.grad += w_i_grad.reshape(self.W.grad.shape)
+        self.B.grad += np.sum(d_out, axis=0, keepdims=True).reshape(self.B.grad.shape)
+
+        return d_input.reshape(self.X.shape)
 
     def params(self):
         return { 'W': self.W, 'B': self.B }
