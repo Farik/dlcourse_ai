@@ -132,19 +132,23 @@ class ConvolutionalLayer:
         
         # It's ok to use loops for going over width and height
         # but try to avoid having any other loops
-        # i = np.zeros((batch_size, out_height, out_width, channels))
-        # for y in range(out_height):
-        #     for x in range(out_width):
-        #         # TODO: Implement forward pass for specific location
-        #         i[:, y, x] = np.sum(X[:, slice(y, y+self.filter_size), slice(x, x+self.filter_size), :]
-        #                                             * self.W.value, axis=(1, 2)) + self.B.value
-        #
-        # return i
+        i = np.zeros((batch_size, out_height, out_width, self.out_channels))
+        for y in range(out_height):
+            for x in range(out_width):
+                # TODO: Implement forward pass for specific location
+                # i[:, y, x] = np.sum(X[:, slice(y, y+self.filter_size), slice(x, x+self.filter_size), :]
+                #                                     * self.W.value, axis=(1, 2)) + self.B.value
+                x_i = np.reshape(self.X[:, slice(y, y+self.filter_size), slice(x, x+self.filter_size), :],
+                                 (batch_size, self.filter_size*self.filter_size*self.in_channels)) #out_height*out_width*self.in_channels
+                w_i = np.reshape(self.W.value, (self.filter_size*self.filter_size*self.in_channels, self.out_channels))
 
-        x_i = np.reshape(self.X, (batch_size, self.filter_size*self.filter_size*self.in_channels)) #out_height*out_width*self.in_channels
-        w_i = np.reshape(self.W.value, (self.filter_size*self.filter_size*self.in_channels, self.out_channels))
+                i[:, y, x] = (np.dot(x_i, w_i) + self.B.value) #.reshape((batch_size, out_height, out_width, self.out_channels))
+        return i
 
-        return (np.dot(x_i, w_i) + self.B.value).reshape((batch_size, out_height, out_width, self.out_channels))
+        # x_i = np.reshape(self.X, (batch_size, self.filter_size*self.filter_size*self.in_channels)) #out_height*out_width*self.in_channels
+        # w_i = np.reshape(self.W.value, (self.filter_size*self.filter_size*self.in_channels, self.out_channels))
+
+        # return (np.dot(x_i, w_i) + self.B.value).reshape((batch_size, out_height, out_width, self.out_channels))
 
 
     def backward(self, d_out):
@@ -162,26 +166,26 @@ class ConvolutionalLayer:
         # of the output
 
         # Try to avoid having any other loops here too
-        # for y in range(out_height):
-        #     for x in range(out_width):
-        #         # TODO: Implement backward pass for specific location
-        #         # Aggregate gradients for both the input and
-        #         # the parameters (W and B)
-        #         pass
+        for y in range(out_height):
+            for x in range(out_width):
+                # TODO: Implement backward pass for specific location
+                # Aggregate gradients for both the input and
+                # the parameters (W and B)
+
+
+
+
+        # x_i = np.reshape(self.X, (batch_size, self.filter_size*self.filter_size*self.in_channels))
+        # w_i = np.reshape(self.W.value, (self.filter_size*self.filter_size*self.in_channels, self.out_channels))
+        # d_out_i = np.reshape(d_out, (batch_size*out_height*out_width, self.out_channels))
         #
-        # raise Exception("Not implemented!")
-
-        x_i = np.reshape(self.X, (batch_size, self.filter_size*self.filter_size*self.in_channels))
-        w_i = np.reshape(self.W.value, (self.filter_size*self.filter_size*self.in_channels, self.out_channels))
-        d_out_i = np.reshape(d_out, (batch_size*out_height*out_width, self.out_channels))
-
-        d_input = np.dot(d_out_i, w_i.T)
-        w_i_grad = np.dot(x_i.T, d_out_i)
-
-        self.W.grad += w_i_grad.reshape(self.W.grad.shape)
-        self.B.grad += np.sum(d_out, axis=0, keepdims=True).reshape(self.B.grad.shape)
-
-        return d_input.reshape(self.X.shape)
+        # d_input = np.dot(d_out_i, w_i.T)
+        # w_i_grad = np.dot(x_i.T, d_out_i)
+        #
+        # self.W.grad += w_i_grad.reshape(self.W.grad.shape)
+        # self.B.grad += np.sum(d_out, axis=0, keepdims=True).reshape(self.B.grad.shape)
+        #
+        # return d_input.reshape(self.X.shape)
 
     def params(self):
         return { 'W': self.W, 'B': self.B }
