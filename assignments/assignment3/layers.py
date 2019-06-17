@@ -166,13 +166,26 @@ class ConvolutionalLayer:
         # of the output
 
         # Try to avoid having any other loops here too
+        d_input = np.zeros(self.X.shape)
         for y in range(out_height):
             for x in range(out_width):
                 # TODO: Implement backward pass for specific location
                 # Aggregate gradients for both the input and
                 # the parameters (W and B)
+                x_i = np.reshape(self.X[:, slice(y, y+self.filter_size), slice(x, x+self.filter_size), :],
+                                 (batch_size, self.filter_size*self.filter_size*self.in_channels))
+                w_i = np.reshape(self.W.value, (self.filter_size*self.filter_size*self.in_channels, self.out_channels))
 
+                d_x_i = np.dot(d_out, w_i.T)
+                d_input[:, slice(y, y+self.filter_size), slice(x, x+self.filter_size), :] \
+                    += np.reshape(d_x_i, (batch_size, self.filter_size, self.filter_size, self.in_channels))
 
+                d_w_i = np.dot(x_i.T, d_out.reshape(self.in_channels, self.out_channels))
+                self.W.grad += np.reshape(d_w_i, (self.filter_size, self.filter_size, self.in_channels, self.out_channels))
+
+        self.B.grad = np.sum(d_out, axis=(0, 1, 2))
+
+        return d_input
 
 
         # x_i = np.reshape(self.X, (batch_size, self.filter_size*self.filter_size*self.in_channels))
