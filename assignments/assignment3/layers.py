@@ -176,16 +176,18 @@ class ConvolutionalLayer:
                                  (batch_size, self.filter_size*self.filter_size*self.in_channels))
                 w_i = np.reshape(self.W.value, (self.filter_size*self.filter_size*self.in_channels, self.out_channels))
 
-                d_x_i = np.dot(d_out, w_i.T)
+                d_out_i = d_out[:, y, x, :]
+
+                d_x_i = np.dot(d_out_i.reshape(batch_size, self.out_channels), w_i.T)
                 d_input[:, slice(y, y+self.filter_size), slice(x, x+self.filter_size), :] \
                     += np.reshape(d_x_i, (batch_size, self.filter_size, self.filter_size, self.in_channels))
 
-                d_w_i = np.dot(x_i.T, d_out.reshape(self.in_channels, self.out_channels))
+                d_w_i = np.dot(x_i.T, d_out_i.reshape(batch_size, self.out_channels))
                 self.W.grad += np.reshape(d_w_i, (self.filter_size, self.filter_size, self.in_channels, self.out_channels))
 
         self.B.grad = np.sum(d_out, axis=(0, 1, 2))
 
-        return d_input
+        return d_input[:, self.padding:-self.padding, self.padding:-self.padding, :]
 
 
         # x_i = np.reshape(self.X, (batch_size, self.filter_size*self.filter_size*self.in_channels))
