@@ -187,7 +187,10 @@ class ConvolutionalLayer:
 
         self.B.grad = np.sum(d_out, axis=(0, 1, 2))
 
-        return d_input[:, self.padding:-self.padding, self.padding:-self.padding, :]
+        if self.padding > 0:
+            d_input = d_input[:, self.padding:-self.padding, self.padding:-self.padding, :]
+
+        return d_input
 
 
         # x_i = np.reshape(self.X, (batch_size, self.filter_size*self.filter_size*self.in_channels))
@@ -221,15 +224,41 @@ class MaxPoolingLayer:
 
     def forward(self, X):
         batch_size, height, width, channels = X.shape
-        # TODO: Implement maxpool forward pass
-        # Hint: Similarly to Conv layer, loop on
-        # output x/y dimension
-        raise Exception("Not implemented!")
+        self.X = X.copy()
+
+        s = self.stride
+        p = self.pool_size
+        hp = height//p
+        wp = width//p
+        out = np.zeros((batch_size, hp, wp, channels))
+        self.max_index = np.zeros((hp, wp, batch_size*channels), int)
+        for y in range(0, height, s):
+            for x in range(0, width, s):
+                ys = y//self.stride
+                xs = x//self.stride
+                pool_frame = self.X[:, y:y+p, x:x+p, :].reshape(batch_size*channels, p**2)
+                max_index = np.argmax(pool_frame, axis=1)
+                out[:, ys, xs, :] = pool_frame[(range(pool_frame.shape[0]), max_index)].reshape(batch_size, channels)
+                self.max_index[ys, xs] = max_index
+
+        return out
 
     def backward(self, d_out):
-        # TODO: Implement maxpool backward pass
         batch_size, height, width, channels = self.X.shape
-        raise Exception("Not implemented!")
+        d_input = np.zeros(self.X.shape)
+
+        s = self.stride
+        p = self.pool_size
+        for ys in range(d_out.shape[1]):
+            for xs in range(d_out.shape[2]):
+                y = ys*s
+                x = xs*s
+                max_index = self.max_index[ys, xs]
+                pool_frame = d_input[:, y:y+p, x:x+p, :].reshape(batch_size*channels, p**2)
+                pool_frame[(range(pool_frame.shape[0]), max_index)] = d_out.reshape(max_index.shape)
+                d_input[:, y:y+p, x:x+p, :] += pool_frame.reshape(d_input.shape)
+
+        return d_input
 
     def params(self):
         return {}
