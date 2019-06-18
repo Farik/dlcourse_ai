@@ -256,7 +256,7 @@ class MaxPoolingLayer:
                 max_index = self.max_index[ys, xs]
                 pool_frame = d_input[:, y:y+p, x:x+p, :].reshape(batch_size*channels, p**2)
                 pool_frame[(range(pool_frame.shape[0]), max_index)] = d_out.reshape(max_index.shape)
-                d_input[:, y:y+p, x:x+p, :] += pool_frame.reshape(d_input.shape)
+                #d_input[:, y:y+p, x:x+p, :] += pool_frame.reshape(d_input.shape)
 
         return d_input
 
