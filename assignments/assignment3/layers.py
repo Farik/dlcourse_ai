@@ -231,15 +231,16 @@ class MaxPoolingLayer:
         hp = height//p
         wp = width//p
         out = np.zeros((batch_size, hp, wp, channels))
-        self.max_index = np.zeros((hp, wp, batch_size*channels), int)
+        self.max_index = np.zeros((hp, wp),dtype=object)
         for y in range(0, height, s):
             for x in range(0, width, s):
                 ys = y//self.stride
                 xs = x//self.stride
-                pool_frame = self.X[:, y:y+p, x:x+p, :].reshape(batch_size*channels, p**2)
-                max_index = np.argmax(pool_frame, axis=1)
-                out[:, ys, xs, :] = pool_frame[(range(pool_frame.shape[0]), max_index)].reshape(batch_size, channels)
-                self.max_index[ys, xs] = max_index
+                pool_frame_flattern = self.X[:, y:y+p, x:x+p, :].reshape(batch_size*channels, p**2)
+                pool_max_index = np.argmax(pool_frame_flattern, axis=1)
+                #out[:, ys, xs, :] = pool_frame_flattern[(range(pool_frame_flattern.shape[0]), pool_max_index)].reshape(batch_size, channels)
+                out[:, ys, xs, :] = np.amax(pool_frame_flattern[:,:],axis=1).reshape(batch_size, channels)
+                self.max_index[ys, xs] = np.where(pool_frame_flattern == np.array(np.amax(pool_frame_flattern, axis=1))[:, None])
 
         return out
 
@@ -253,10 +254,11 @@ class MaxPoolingLayer:
             for xs in range(d_out.shape[2]):
                 y = ys*s
                 x = xs*s
-                max_index = self.max_index[ys, xs]
-                pool_frame = d_input[:, y:y+p, x:x+p, :].reshape(batch_size*channels, p**2)
-                pool_frame[(range(pool_frame.shape[0]), max_index)] = d_out.reshape(max_index.shape)
-                #d_input[:, y:y+p, x:x+p, :] += pool_frame.reshape(d_input.shape)
+                pool_max_index = self.max_index[ys, xs]
+                pool_frame_flattern = d_input[:, y:y+p, x:x+p, :].reshape(batch_size*channels, p**2)
+                #pool_frame_flattern[(range(pool_frame_flattern.shape[0]), pool_max_index)] += d_out.reshape(pool_max_index.shape)
+                pool_frame_flattern[pool_max_index] += d_out.reshape(batch_size*channels)[pool_max_index[:][0]]
+                #d_input[:, y:y+p, x:x+p, :] += pool_frame_flattern.reshape(d_input.shape)
 
         return d_input
 
