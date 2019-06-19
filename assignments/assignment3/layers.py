@@ -236,11 +236,9 @@ class MaxPoolingLayer:
             for x in range(0, width, s):
                 ys = y//self.stride
                 xs = x//self.stride
-                pool_frame_flattern = self.X[:, y:y+p, x:x+p, :].reshape(batch_size*channels, p**2)
-                pool_max_index = np.argmax(pool_frame_flattern, axis=1)
-                #out[:, ys, xs, :] = pool_frame_flattern[(range(pool_frame_flattern.shape[0]), pool_max_index)].reshape(batch_size, channels)
-                out[:, ys, xs, :] = np.amax(pool_frame_flattern[:,:],axis=1).reshape(batch_size, channels)
-                self.max_index[ys, xs] = np.where(pool_frame_flattern == np.array(np.amax(pool_frame_flattern, axis=1))[:, None])
+                pool_frame_flat = self.X[:, y:y+p, x:x+p, :].reshape(batch_size*channels, p**2)
+                out[:, ys, xs, :] = np.amax(pool_frame_flat[:, :], axis=1).reshape(batch_size, channels)
+                self.max_index[ys, xs] = np.where(pool_frame_flat == np.array(np.amax(pool_frame_flat, axis=1))[:, None])
 
         return out
 
@@ -255,10 +253,10 @@ class MaxPoolingLayer:
                 y = ys*s
                 x = xs*s
                 pool_max_index = self.max_index[ys, xs]
-                pool_frame_flattern = d_input[:, y:y+p, x:x+p, :].reshape(batch_size*channels, p**2)
-                #pool_frame_flattern[(range(pool_frame_flattern.shape[0]), pool_max_index)] += d_out.reshape(pool_max_index.shape)
-                pool_frame_flattern[pool_max_index] += d_out.reshape(batch_size*channels)[pool_max_index[:][0]]
-                #d_input[:, y:y+p, x:x+p, :] += pool_frame_flattern.reshape(d_input.shape)
+                pool_frame_flat = d_input[:, y:y+p, x:x+p, :].reshape(batch_size*channels, p**2)
+
+                equal_max_counts = np.unique(self.max_index[ys, xs][:][0], return_counts=True)[1]
+                pool_frame_flat[pool_max_index] += (d_out.reshape(batch_size*channels)/equal_max_counts)[pool_max_index[:][0]]
 
         return d_input
 
